@@ -4,21 +4,24 @@
 
     :copyright: (C) Pritish Chakraborty
 """
+import argparse
 from selenium import webdriver
 import time
 
 
 class OnePlus:
 
-    def setUp(self):
+    def __init__(self, email_base, invite_url):
         """
-        This method is called before each
-        test function executes.
+        Initializer
         """
         self.driver = webdriver.Chrome()
+        self.email_base = email_base
+        self.invite_url = invite_url
 
         # The following lines are needed if you decide to use Phantom.
         # Phantom didn't work for me - Chrome did.
+        # Probably because of the captcha verification.
         # https://github.com/ariya/phantomjs/issues/11637
         #self.driver.set_window_size(1150, 900)
         #self.driver.set_window_position(0, 0)
@@ -27,19 +30,15 @@ class OnePlus:
         """
         Test OnePlus invite spamming for Moksh.
         """
-        self.setUp()
-
-        url = 'your_oneplus_invite_url'
-        email_base = 'your_email'
         email_domain = 'gmail.com'
         separator = '@'
-        emails = [email_base + separator + email_domain]
+        emails = [self.email_base + separator + email_domain]
 
         # Generate the various emails with period characters
         # in different positions
-        for i in range(1, len(email_base)):
+        for i in range(1, len(self.email_base)):
             emails.append(
-                email_base[:i] + '.' + email_base[i:] +
+                self.email_base[:i] + '.' + self.email_base[i:] +
                 separator + email_domain
             )
 
@@ -47,7 +46,7 @@ class OnePlus:
             try:
                 print "On email: %s" % email
                 self.driver.implicitly_wait(12)
-                self.driver.get(url)
+                self.driver.get(self.invite_url)
                 print "On the page"
 
                 self.driver.implicitly_wait(5)
@@ -79,13 +78,19 @@ class OnePlus:
             except Exception as e:
                 print e
 
-        self.tearDown()
-
-    def tearDown(self):
-        """
-        This function is executed after each test function.
-        """
         self.driver.close()
 
 
-OnePlus().test_oneplus_invites()
+parser = argparse.ArgumentParser(description='OnePlus Hax')
+parser.add_argument(
+    '--email_base', required=True,
+    help='Base of email. Eg: abc if email is abc@gmail.com'
+)
+parser.add_argument(
+    '--invite-url', required=True,
+    help='One Plus Invite URL. Encapsulate in double quotes.'
+)
+
+args = parser.parse_args()
+
+OnePlus(email_base=args.email_base, invite_url=args.invite_url).test_oneplus_invites()
